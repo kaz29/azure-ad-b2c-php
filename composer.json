@@ -13,7 +13,8 @@
         "test": "./vendor/bin/phpunit"
     },
     "require": {
-        "gree/jose": "^2.2"
+        "gree/jose": "^2.2",
+        "guzzlehttp/guzzle": "~6.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.0"
