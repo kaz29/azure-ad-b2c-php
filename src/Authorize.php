@@ -5,6 +5,7 @@ namespace kaz29\AzureADB2C;
 
 use GuzzleHttp\Client;
 use kaz29\AzureADB2C\Entity\Configuration;
+use kaz29\AzureADB2C\Exception\InternalErrorException;
 use kaz29\AzureADB2C\Exception\ResponseErrorException;
 use function GuzzleHttp\Psr7\build_query;
 
@@ -55,5 +56,41 @@ class Authorize {
         $this->configuration = new Configuration($json);
         
         return $this->configuration;
+    }
+
+    public function setOpenIdConfiguration(Configuration $config)
+    {
+        $this->configuration = $config;
+    }
+
+    public function getAuthorizationEndpoint(
+        string $p, 
+        string $redirectUri,
+        string $scope, 
+        $nonce, 
+        string $responseMode = 'form_post', 
+        string $responseType = 'code id_token',
+        string $state = null
+    )
+    {
+        if (is_null($this->configuration)) {
+            throw new InternalErrorException('Configuration not complet');
+        }
+
+        $query = [
+            'p' => $p,
+            'client_id' => $this->client_id,
+            'redirect_uri' => $redirectUri,
+            'scope' => $scope,
+            'response_type' => $responseType,
+            'response_mode' => $responseMode,
+            'nonce' => $nonce,
+        ];
+
+        if (!is_null($state)) {
+            $query['state'] = $state;
+        }
+
+        return $this->configuration->authorizationEndpoint . '?' . build_query($query);
     }
 }
