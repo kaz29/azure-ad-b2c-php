@@ -9,10 +9,23 @@
             "email": "cyo@mac.com"
         }
     ],
+    "scripts": {
+        "test": "./vendor/bin/phpunit"
+    },
     "require": {
         "gree/jose": "^2.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "kaz29\\AzureADB2C\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "kaz29\\AzureADB2C\\Test\\": "tests/"
+        }
     }
 }
