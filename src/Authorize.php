@@ -71,7 +71,6 @@ class Authorize {
     }
 
     public function getAuthorizationEndpoint(
-        string $p, 
         string $redirectUri,
         string $scope, 
         $nonce, 
@@ -85,7 +84,6 @@ class Authorize {
         }
 
         $query = [
-            'p' => $p,
             'client_id' => $this->client_id,
             'redirect_uri' => $redirectUri,
             'scope' => $scope,
@@ -98,7 +96,7 @@ class Authorize {
             $query['state'] = $state;
         }
 
-        return $this->configuration->authorizationEndpoint . '?' . build_query($query);
+        return $this->configuration->authorizationEndpoint . '&' . build_query($query);
     }
 
     public function getJWKs(): array

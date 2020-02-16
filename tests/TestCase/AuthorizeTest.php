@@ -61,18 +61,16 @@ class AuthorizeTest extends TestCase
         $client = new Client();
         $authotize = new Authorize($client, new JWT(), 'azadb2cresr', 'dummy_client_id', 'dummy_client_secret');
         $authotize->setOpenIdConfiguration(new Configuration([
-            'authorization_endpoint' => 'https://example.com/authorization',
+            'authorization_endpoint' => 'https://example.com/authorization?p=b2c_1_normalsignupsignin',
         ]));
         $result = $authotize->getAuthorizationEndpoint(
-            'B2C_1_normalsignupsignin',
             'https://example.com/oauth/callback',
             'https://azadb2cresr.onmicrosoft.com/api openid offline_access',
             12345
         );
 
-        $expected = 'https://example.com/authorization?' .
+        $expected = 'https://example.com/authorization?p=b2c_1_normalsignupsignin&' .
             build_query([
-                'p' => 'B2C_1_normalsignupsignin',
                 'client_id' => 'dummy_client_id',
                 'redirect_uri' => 'https://example.com/oauth/callback',
                 'scope' => 'https://azadb2cresr.onmicrosoft.com/api openid offline_access',
