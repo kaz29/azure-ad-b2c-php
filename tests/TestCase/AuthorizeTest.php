@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace kaz29\AzureADB2C\Test;
 
 use GuzzleHttp\Client;
+use JOSE_JWS;
 use JOSE_JWT;
 use kaz29\AzureADB2C\Authorize;
 use kaz29\AzureADB2C\Entity\AuthorizationCallbackParams;
@@ -11,6 +12,7 @@ use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\JWT;
 use PHPUnit\Framework\TestCase;
 use phpseclib\Crypt\RSA;
+use stdClass;
 
 use function GuzzleHttp\Psr7\build_query;
 
@@ -202,12 +204,18 @@ class AuthorizeTest extends TestCase
         $jwt->expects($this->once())
             ->method('decodeJWT')
             ->with(
-                $this->equalTo('dummy_public_key'),
+                $this->equalTo('dummy_access_token'),
             )
             ->willReturn(new class() extends JOSE_JWT {
                 function verify($publicKey, $alg = null)
                 {
-                    return null;
+                    $jwt = new stdClass();
+                    $jwt->header = [];
+                    $jwt->claims = [];
+                    $jwt->signature = [];
+                    $jwt->raw = [];
+                    
+                    return new JOSE_JWS($jwt);
                 }
             });
 

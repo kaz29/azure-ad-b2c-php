@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace kaz29\AzureADB2C\Entity;
 
+use JOSE_JWS;
+
 /**
  * AccessToken
  *
@@ -15,6 +17,7 @@ namespace kaz29\AzureADB2C\Entity;
  * @property string $profileInfo
  * @property string $refreshToken
  * @property int $refreshtokenExpiresIn
+ * @property JOSE_JWS $jws
  */
 class AccessToken extends BaseEntity {
     protected $config = [
@@ -30,4 +33,16 @@ class AccessToken extends BaseEntity {
             'refresh_token_expires_in' => 'refreshtokenExpiresIn',
         ],
     ];
+
+    protected $jws;
+
+    public function setJWS(JOSE_JWS $jws): void
+    {
+        $this->jws = $jws;
+    }
+
+    public function getJWS(): JOSE_JWS
+    {
+        return $this->jws;
+    }
 }

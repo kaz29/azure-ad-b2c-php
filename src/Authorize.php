@@ -153,8 +153,12 @@ class Authorize {
         $accessToken = new AccessToken(json_decode((string)$response->getBody(), true));
 
         $jwks = $this->getJWKs();
+
         $rsa = $this->jwt->decodeJWK($jwks[0]);
-        $jws = $this->jwt->decodeJWT($rsa->getPublicKey(), 'RS256');
+        $jwt = $this->jwt->decodeJWT($accessToken->accessToken, 'RS256');
+        $jws = $jwt->verify($rsa->getPublicKey(), 'RS256');
+
+        $accessToken->setJWS($jws);
 
         return $accessToken;
     }
