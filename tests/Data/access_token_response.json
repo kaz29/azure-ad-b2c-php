@@ -1,0 +1,11 @@
+{
+    "access_token": "dummy_access_token",
+    "token_type": "Bearer",
+    "not_before": 1581737181,
+    "expires_in": 3600,
+    "expires_on": 1581740781,
+    "resource": "5E6FA058-B091-4089-AA75-3FFB31941046",
+    "profile_info": "dummy_profile_info",
+    "refresh_token": "dummy_refresh_access_token",
+    "refresh_token_expires_in": 1209600
+  }

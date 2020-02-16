@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace kaz29\AzureADB2C;
 
 use GuzzleHttp\Client;
+use kaz29\AzureADB2C\Entity\AccessToken;
+use kaz29\AzureADB2C\Entity\AuthorizationCallbackParams;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\Exception\InternalErrorException;
 use kaz29\AzureADB2C\Exception\ResponseErrorException;
@@ -17,6 +19,8 @@ use function GuzzleHttp\Psr7\build_query;
  * @property string $client_id
  * @property string $client_secret
  * @property \kaz29\AzureADB2C\Entity\Configuration $configuration
+ * @property \kaz29\AzureADB2C\JWT $jwt
+ * @property array $jwks
  */
 class Authorize {
     protected static $CONFIGRATION_URI_FORMAT='https://%s.b2clogin.com/%s.onmicrosoft.com/v2.0/.well-known/openid-configuration';
@@ -26,10 +30,13 @@ class Authorize {
     protected $client_id;
     protected $client_secret;
     protected $configuration;
+    protected $jwt;
+    protected $jwks;
 
-    public function __construct(Client $client, string $tenant, string $client_id, string $client_secret)
+    public function __construct(Client $client, JWT $jwt, string $tenant, string $client_id, string $client_secret)
     {
         $this->client = $client;
+        $this->jwt = $jwt;
         $this->tenant = $tenant;
         $this->client_id = $client_id;
         $this->client_secret = $client_secret;
@@ -71,10 +78,10 @@ class Authorize {
         string $responseMode = 'form_post', 
         string $responseType = 'code id_token',
         string $state = null
-    )
+    ): string
     {
         if (is_null($this->configuration)) {
-            throw new InternalErrorException('Configuration not complet');
+            throw new InternalErrorException('Configuration not complete');
         }
 
         $query = [
@@ -92,5 +99,65 @@ class Authorize {
         }
 
         return $this->configuration->authorizationEndpoint . '?' . build_query($query);
+    }
+
+    public function getJWKs(): array
+    {
+        if (is_array($this->jwks)) {
+            return $this->jwks;
+        }
+
+        if (is_null($this->configuration)) {
+            throw new InternalErrorException('Configuration not complete');
+        }
+        $response = $this->client->get($this->configuration->jwksUri);
+        if ($response->getStatusCode() !== 200) {
+            throw new ResponseErrorException('Could not get jwks', $response->getStatusCode());
+        }
+
+        $jwks = json_decode((string)$response->getBody(), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new InternalErrorException('Could not decode jwks');
+        }
+
+        if (!array_key_exists('keys', $jwks) || !is_array($jwks['keys'])) {
+            throw new ResponseErrorException('Unknown jwks response format');
+        }
+
+        $this->jwks = $jwks['keys'];
+        
+        return $this->jwks;
+    }
+
+    public function getAccessToken(
+        string $code, 
+        string $scope,
+        string $redirect_url,
+        string $grant_type = 'authorization_code'): AccessToken
+    {
+        $response = $this->client->post(
+            $this->configuration->tokenEndpoint, 
+            [
+                'form_params' => [
+                    'grant_type' => $grant_type,
+                    'client_id' => $this->client_id,
+                    'scope' => $scope,
+                    'code' => $code,
+                    'redirect_uri' => $redirect_url,
+                    'client_secret' => $this->client_secret,
+                ]
+            ]
+        );
+        if ($response->getStatusCode() !== 200) {
+            throw new ResponseErrorException('Could not get accessToken', $response->getStatusCode());
+        }
+
+        $accessToken = new AccessToken(json_decode((string)$response->getBody(), true));
+
+        $jwks = $this->getJWKs();
+        $rsa = $this->jwt->decodeJWK($jwks[0]);
+        $jws = $this->jwt->decodeJWT($rsa->getPublicKey(), 'RS256');
+
+        return $accessToken;
     }
 }

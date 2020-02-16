@@ -1,0 +1,12 @@
+{
+    "keys": [
+      {
+        "kid": "dummy_kid",
+        "nbf": 1493763266,
+        "use": "sig",
+        "kty": "RSA",
+        "e": "AQAB",
+        "n": "dummy_n"
+      }
+    ]
+  }
