@@ -1,5 +1,5 @@
 {
-    "name": "kaz/azure-ad-b2c-php",
+    "name": "kaz29/azure-ad-b2c-php",
     "description": "Azure AD B2C for PHP",
     "type": "library",
     "license": "MIT",
