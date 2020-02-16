@@ -6,7 +6,7 @@ namespace kaz29\AzureADB2C\Test\Entity;
 use kaz29\AzureADB2C\Entity\BaseEntity;
 use PHPUnit\Framework\TestCase;
 
-class ValueObjectTest extends TestCase
+class BaseEntityTest extends TestCase
 {
     public function testSimple()
     {
@@ -33,7 +33,7 @@ class ValueObjectTest extends TestCase
         };
 
         $this->assertEquals('string data 1', $obj->stringKey);
-        $this->assertNull($this->emptyKey);
+        $this->assertNull($obj->emptyKey);
     }
 
     public function testCouldNotUpdate()
