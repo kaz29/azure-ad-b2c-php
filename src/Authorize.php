@@ -4,11 +4,13 @@ declare(strict_types=1);
 namespace kaz29\AzureADB2C;
 
 use GuzzleHttp\Client;
+use JOSE_Exception_VerificationFailed;
 use kaz29\AzureADB2C\Entity\AccessToken;
-use kaz29\AzureADB2C\Entity\AuthorizationCallbackParams;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\Exception\InternalErrorException;
 use kaz29\AzureADB2C\Exception\ResponseErrorException;
+use kaz29\AzureADB2C\Exception\VerificationError;
+
 use function GuzzleHttp\Psr7\build_query;
 
 /**
@@ -152,14 +154,32 @@ class Authorize {
 
         $accessToken = new AccessToken(json_decode((string)$response->getBody(), true));
 
-        $jwks = $this->getJWKs();
-
-        $rsa = $this->jwt->decodeJWK($jwks[0]);
-        $jwt = $this->jwt->decodeJWT($accessToken->accessToken, 'RS256');
-        $jws = $jwt->verify($rsa->getPublicKey(), 'RS256');
-
+        $jws = $this->verifyToken($accessToken->accessToken);
         $accessToken->setJWS($jws);
 
         return $accessToken;
+    }
+
+    public function verifyToken(string $token)
+    {
+        try {
+            $jwt = $this->jwt->decodeJWT($token, 'RS256');
+            $jwk = $this->findJwk($jwt->header['kid']);
+            $rsa = $this->jwt->decodeJWK($jwk);
+            return $jwt->verify($rsa->getPublicKey(), 'RS256');
+        } catch (JOSE_Exception_VerificationFailed $e) {
+            throw new VerificationError($e->getMessage());
+        }
+    }
+
+    public function findJwk(string $kid)
+    {
+        $jwks = $this->getJWKs();
+        $key = array_search($kid, array_column($jwks, 'kid'));;
+        if ($key === false) {
+            throw new VerificationError('Key not found');
+        }
+
+        return $jwks[$key];
     }
 }

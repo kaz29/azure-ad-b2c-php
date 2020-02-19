@@ -207,6 +207,10 @@ class AuthorizeTest extends TestCase
                 $this->equalTo('dummy_access_token'),
             )
             ->willReturn(new class() extends JOSE_JWT {
+                public $header = [
+                    'kid' => "dummy_kid",
+                ];
+
                 function verify($publicKey, $alg = null)
                 {
                     $jwt = new stdClass();
