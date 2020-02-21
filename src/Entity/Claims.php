@@ -23,6 +23,7 @@ namespace kaz29\AzureADB2C\Entity;
  * @property string $familyName
  * @property string $country
  * @property string $postalCode
+ * @property array $emails
  */
 class Claims extends BaseEntity {
     protected $config = [
@@ -44,6 +45,7 @@ class Claims extends BaseEntity {
             'family_name' => 'familyName',
             'country' => 'country',
             'postalCode' => 'postalCode',
+            'emails' => 'emails'
         ],
     ];
 }
