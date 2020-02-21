@@ -48,4 +48,20 @@ class Claims extends BaseEntity {
             'emails' => 'emails'
         ],
     ];
+
+    public function getFullName(string $locale): string
+    {
+        $fullName = '';
+        switch($locale) {
+            case 'ja':
+            case 'ja_JP':
+                $fullName = "{$this->familyName} {$this->givenName}";
+                break;
+            default:
+                $fullName = "{$this->givenName} {$this->familyName}";
+                break;
+        }
+
+        return (string)$fullName;
+    }
 }
