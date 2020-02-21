@@ -18,6 +18,8 @@ use JOSE_JWS;
  * @property string $refreshToken
  * @property int $refreshtokenExpiresIn
  * @property JOSE_JWS $jws
+ * @property Header $header
+ * @property Claims $claims
  */
 class AccessToken extends BaseEntity {
     protected $config = [
@@ -35,14 +37,29 @@ class AccessToken extends BaseEntity {
     ];
 
     protected $jws;
+    protected $header;
+    protected $claims;
 
     public function setJWS(JOSE_JWS $jws): void
     {
         $this->jws = $jws;
+
+        $this->header = new Header((array)$jws->header);
+        $this->claims = new Claims((array)$jws->claims);
     }
 
     public function getJWS(): JOSE_JWS
     {
         return $this->jws;
+    }
+
+    public function getClaims(): Claims
+    {
+        return $this->claims;
+    }
+
+    public function getHeader(): Header
+    {
+        return $this->header;
     }
 }
