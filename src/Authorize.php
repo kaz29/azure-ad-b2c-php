@@ -20,12 +20,13 @@ use function GuzzleHttp\Psr7\build_query;
  * @property string $tenant
  * @property string $client_id
  * @property string $client_secret
+ * @property string|null $flow
  * @property \kaz29\AzureADB2C\Entity\Configuration $configuration
  * @property \kaz29\AzureADB2C\JWT $jwt
  * @property array $jwks
  */
 class Authorize {
-    protected static $CONFIGRATION_URI_FORMAT='https://%s.b2clogin.com/%s.onmicrosoft.com/v2.0/.well-known/openid-configuration';
+    protected static $CONFIGURATION_URI_FORMAT='https://%s.b2clogin.com/%s.onmicrosoft.com/v2.0/.well-known/openid-configuration';
 
     protected $client;
     protected $tenant;
@@ -46,7 +47,7 @@ class Authorize {
 
     public function getConfigurationUri(string $p): string
     {
-        $uri = sprintf(self::$CONFIGRATION_URI_FORMAT, $this->tenant, $this->tenant);
+        $uri = sprintf(self::$CONFIGURATION_URI_FORMAT, $this->tenant, $this->tenant);
         $query = [
             'p' => $p,
         ];
