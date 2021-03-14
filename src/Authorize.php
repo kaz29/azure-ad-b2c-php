@@ -4,14 +4,13 @@ declare(strict_types=1);
 namespace kaz29\AzureADB2C;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Query;
 use JOSE_Exception_VerificationFailed;
 use kaz29\AzureADB2C\Entity\AccessToken;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\Exception\InternalErrorException;
 use kaz29\AzureADB2C\Exception\ResponseErrorException;
 use kaz29\AzureADB2C\Exception\VerificationError;
-
-use function GuzzleHttp\Psr7\build_query;
 
 /**
  * Authorize class
@@ -52,7 +51,7 @@ class Authorize {
             'p' => $p,
         ];
 
-        return $uri . '?' . build_query($query);
+        return $uri . '?' . Query::build($query);
     }
 
     public function loadOpenIdConfiguration(string $p): Configuration
@@ -99,7 +98,7 @@ class Authorize {
             $query['state'] = $state;
         }
 
-        return $this->configuration->authorizationEndpoint . '&' . build_query($query);
+        return $this->configuration->authorizationEndpoint . '&' . Query::build($query);
     }
 
     public function getJWKs(): array
