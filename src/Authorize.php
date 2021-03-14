@@ -35,13 +35,18 @@ class Authorize {
     protected $jwt;
     protected $jwks;
 
-    public function __construct(Client $client, JWT $jwt, string $tenant, string $client_id, string $client_secret)
+    public function __construct(Client $client, JWT $jwt, array $config)
     {
         $this->client = $client;
         $this->jwt = $jwt;
-        $this->tenant = $tenant;
-        $this->client_id = $client_id;
-        $this->client_secret = $client_secret;
+        $this->tenant = $config['tenant'] ?? '';
+        $this->client_id = $config['client_id'] ?? '';
+        $this->client_secret = $config['client_secret'] ?? '';
+        $this->flow = $config['flow'] ?? null;
+
+        if ($this->flow !== null) {
+            $this->loadOpenIdConfiguration($this->flow);
+        }
     }
 
     public function getConfigurationUri(string $p): string
