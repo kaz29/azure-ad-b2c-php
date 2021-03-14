@@ -152,7 +152,7 @@ class Authorize {
             throw new ResponseErrorException('Could not get accessToken', $response->getStatusCode());
         }
 
-        $accessToken = new AccessToken(json_decode((string)$response->getBody(), true));
+        $accessToken = new AccessToken(json_decode((string)$response->getBody()->getContents(), true));
 
         $jws = $this->verifyToken($accessToken->accessToken);
         $accessToken->setJWS($jws);

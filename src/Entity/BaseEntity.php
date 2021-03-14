@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace kaz29\AzureADB2C\Entity;
 
-abstract class BaseEntity implements \ArrayAccess
+abstract class BaseEntity implements \ArrayAccess, \JsonSerializable
 {
     protected $data = [];
     protected $config = [];
@@ -59,5 +59,10 @@ abstract class BaseEntity implements \ArrayAccess
     public function __set($name, $value)
     {
         throw new \Exception("Could not update '{$name}'");
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return json_encode($this->data);
     }
 }
