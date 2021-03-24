@@ -6,6 +6,7 @@ namespace kaz29\AzureADB2C;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Query;
 use JOSE_Exception_VerificationFailed;
+use JOSE_JWT;
 use kaz29\AzureADB2C\Entity\AccessToken;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\Exception\InternalErrorException;
@@ -46,6 +47,10 @@ class Authorize {
 
         if ($this->flow !== null) {
             $this->loadOpenIdConfiguration($this->flow);
+        }
+
+        if (array_key_exists('jwks', $config) && is_array($config['jwks'])) {
+            $this->jwks = $config['jwks'];
         }
     }
 
@@ -168,7 +173,7 @@ class Authorize {
     public function verifyToken(string $token)
     {
         try {
-            $jwt = $this->jwt->decodeJWT($token, 'RS256');
+            $jwt = $this->decodeJWT($token);
             $jwk = $this->findJwk($jwt->header['kid']);
             $rsa = $this->jwt->decodeJWK($jwk);
             return $jwt->verify($rsa->getPublicKey(), 'RS256');
@@ -186,5 +191,10 @@ class Authorize {
         }
 
         return $jwks[$key];
+    }
+
+    public function decodeJWT(string $token): JOSE_JWT
+    {
+        return $this->jwt->decodeJWT($token);
     }
 }
