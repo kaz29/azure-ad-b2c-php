@@ -16,13 +16,17 @@ namespace kaz29\AzureADB2C\Entity;
  * @property string $ver
  * @property string $iat
  * @property string $nonce
+ * @property string $authTime
  *
  * @property string $idp
+ * @property string $idpAccessToken
+ * 
  * @property string $sub
- * @property string $givenName
- * @property string $familyName
- * @property string $country
- * @property string $postalCode
+ * @property string|null $givenName
+ * @property string|null $familyName
+ * @property string|null $name
+ * @property string|null $country
+ * @property string|null $postalCode
  * @property array $emails
  */
 class Claims extends BaseEntity {
@@ -38,11 +42,15 @@ class Claims extends BaseEntity {
             'var' => 'var',
             'iat' => 'iat',
             'nonce' => 'nonce',
+            'auth_time' => 'authTime',
 
             'idp' => 'idp',
+            'idp_access_token' => 'idpAccessToken',
+
             'sub' => 'sub',
             'given_name' => 'givenName',
             'family_name' => 'familyName',
+            'name' => 'name',
             'country' => 'country',
             'postalCode' => 'postalCode',
             'emails' => 'emails'
