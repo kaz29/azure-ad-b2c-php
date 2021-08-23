@@ -170,6 +170,34 @@ class Authorize {
         return $accessToken;
     }
 
+    public function tokenRefresh(
+        string $refreshToken,
+        string $redirect_url): AccessToken
+    {
+        $response = $this->client->post(
+            $this->configuration->tokenEndpoint,
+            [
+                'form_params' => [
+                    'grant_type' => 'refresh_token',
+                    'client_id' => $this->client_id,
+                    'redirect_uri' => $redirect_url,
+                    'refresh_token' => $refreshToken,
+                    'client_secret' => $this->client_secret,
+                ]
+            ]
+        );
+        if ($response->getStatusCode() !== 200) {
+            throw new ResponseErrorException('Could not get accessToken', $response->getStatusCode());
+        }
+
+        $accessToken = new AccessToken(json_decode((string)$response->getBody()->getContents(), true));
+
+        $jws = $this->verifyToken($accessToken->accessToken);
+        $accessToken->setJWS($jws);
+
+        return $accessToken;
+    }
+
     public function verifyToken(string $token)
     {
         try {
