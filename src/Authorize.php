@@ -35,6 +35,7 @@ class Authorize {
     protected $configuration;
     protected $jwt;
     protected $jwks;
+    protected $authorizationEndpoint = null;
 
     public function __construct(Client $client, JWT $jwt, array $config)
     {
@@ -51,6 +52,10 @@ class Authorize {
 
         if (array_key_exists('jwks', $config) && is_array($config['jwks'])) {
             $this->jwks = $config['jwks'];
+        }
+
+        if (array_key_exists('custom_authorization_endpoint', $config) && !empty($config['custom_authorization_endpoint'])) {
+            $this->authorizationEndpoint = $config['custom_authorization_endpoint'];
         }
     }
 
@@ -91,7 +96,11 @@ class Authorize {
         string $state = null
     ): string
     {
-        if (is_null($this->configuration)) {
+        $authorizationEndpoint = $this->authorizationEndpoint !== null
+            ? $this->authorizationEndpoint
+            : $this->configuration->authorizationEndpoint;
+
+            if (is_null($this->configuration)) {
             throw new InternalErrorException('Configuration not complete');
         }
 
@@ -108,7 +117,7 @@ class Authorize {
             $query['state'] = $state;
         }
 
-        return $this->configuration->authorizationEndpoint . '&' . Query::build($query);
+        return $authorizationEndpoint . '&' . Query::build($query);
     }
 
     public function getJWKs(): array
