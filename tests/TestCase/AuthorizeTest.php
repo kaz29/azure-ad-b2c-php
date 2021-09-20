@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace kaz29\AzureADB2C\Test;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Query;
 use JOSE_JWS;
 use JOSE_JWT;
 use kaz29\AzureADB2C\Authorize;
-use kaz29\AzureADB2C\Entity\AuthorizationCallbackParams;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\JWT;
 use PHPUnit\Framework\TestCase;
@@ -25,7 +25,7 @@ class AuthorizeTest extends TestCase
          * @var Client $client
          */
         $client = $this->getMockBuilder(Client::class)
-            ->setMethods(['get'])
+            ->addMethods(['get'])
             ->getMock();
         $response = new class() {
             public function getStatusCode()
@@ -46,7 +46,7 @@ class AuthorizeTest extends TestCase
             )
             ->willReturn($response);
 
-        $authotize = new Authorize($client, new JWT(), 'azadb2cresr', '', '');
+        $authotize = new Authorize($client, new JWT(), ['tenant' => 'azadb2cresr']);
         $config = $authotize->loadOpenIdConfiguration('B2C_1_normalsignupsignin');
         $this->assertEquals(
             'https://azadb2cresr.b2clogin.com/azadb2cresr.onmicrosoft.com/discovery/v2.0/keys?p=b2c_1_normalsignupsignin', 
@@ -61,18 +61,22 @@ class AuthorizeTest extends TestCase
     public function testAuthorizationEndpoint()
     {
         $client = new Client();
-        $authotize = new Authorize($client, new JWT(), 'azadb2cresr', 'dummy_client_id', 'dummy_client_secret');
-        $authotize->setOpenIdConfiguration(new Configuration([
+        $authorize = new Authorize($client, new JWT(), [
+            'tenant' => 'azadb2cresr', 
+            'client_id' => 'dummy_client_id', 
+            'client_secret' => 'dummy_client_secret',
+        ]);
+        $authorize->setOpenIdConfiguration(new Configuration([
             'authorization_endpoint' => 'https://example.com/authorization?p=b2c_1_normalsignupsignin',
         ]));
-        $result = $authotize->getAuthorizationEndpoint(
+        $result = $authorize->getAuthorizationEndpoint(
             'https://example.com/oauth/callback',
             'https://azadb2cresr.onmicrosoft.com/api openid offline_access',
             12345
         );
 
         $expected = 'https://example.com/authorization?p=b2c_1_normalsignupsignin&' .
-            build_query([
+            Query::build([
                 'client_id' => 'dummy_client_id',
                 'redirect_uri' => 'https://example.com/oauth/callback',
                 'scope' => 'https://azadb2cresr.onmicrosoft.com/api openid offline_access',
@@ -87,7 +91,7 @@ class AuthorizeTest extends TestCase
     public function testGetJwks()
     {
         $client = $this->getMockBuilder(Client::class)
-            ->setMethods(['get'])
+            ->addMethods(['get'])
             ->getMock();
         $response = new class() {
             public function getStatusCode()
@@ -109,12 +113,16 @@ class AuthorizeTest extends TestCase
         /**
          * @var Client $client
          */
-        $authotize = new Authorize($client, new JWT(), 'azadb2cresr', 'dummy_client_id', 'dummy_client_secret');
-        $authotize->setOpenIdConfiguration(new Configuration([
+        $authorize = new Authorize($client, new JWT(), [
+            'tenant' => 'azadb2cresr', 
+            'client_id' => 'dummy_client_id',
+            'client_secret' => 'dummy_client_secret',
+        ]);
+        $authorize->setOpenIdConfiguration(new Configuration([
             'jwks_uri' => 'https://example.com/jwks',
         ]));
 
-        $result = $authotize->getJWKs();
+        $result = $authorize->getJWKs();
         $expected = [
             [
                 "kid" => "dummy_kid",
@@ -134,7 +142,7 @@ class AuthorizeTest extends TestCase
          * @var Client $client
          */
         $client = $this->getMockBuilder(Client::class)
-            ->setMethods(['post', 'get'])
+            ->addMethods(['post', 'get'])
             ->getMock();
         $response = new class() {
             public function getStatusCode()
@@ -144,7 +152,14 @@ class AuthorizeTest extends TestCase
 
             public function getBody()
             {
-                return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'access_token_response.json');
+                $body = new class() {
+                    public function getContents() 
+                    {
+                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'access_token_response.json');
+                    }
+                };
+
+                return $body;
             }
         };
         $client->expects($this->once())
@@ -181,7 +196,7 @@ class AuthorizeTest extends TestCase
             });
 
         $jwt = $this->getMockBuilder(JWT::class)
-            ->setMethods(['decodeJWK', 'decodeJWT'])
+            ->onlyMethods(['decodeJWK', 'decodeJWT'])
             ->getMock();
         $jwt->expects($this->once())
             ->method('decodeJWK')
@@ -226,12 +241,16 @@ class AuthorizeTest extends TestCase
         /**
          * @var JWT $jwt
          */
-        $authotize = new Authorize($client, $jwt, 'azadb2cresr', 'dummy_client_id', 'dummy_client_secret');    
-        $authotize->setOpenIdConfiguration(new Configuration([
+        $authorize = new Authorize($client, $jwt, [
+            'tenant' => 'azadb2cresr', 
+            'client_id' => 'dummy_client_id', 
+            'client_secret' => 'dummy_client_secret',
+        ]);    
+        $authorize->setOpenIdConfiguration(new Configuration([
             'token_endpoint' => 'https://example.com/token',
             'jwks_uri' => 'https://example.com/jwks',
         ]));
-        $result = $authotize->getAccessToken(
+        $result = $authorize->getAccessToken(
             'dummy_code',
             'https://example.com/api/ offline_access',
             'https://localhost/'
