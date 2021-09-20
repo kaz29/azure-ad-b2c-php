@@ -5,8 +5,6 @@ namespace kaz29\AzureADB2C;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Query;
-use JOSE_Exception_VerificationFailed;
-use JOSE_JWT;
 use kaz29\AzureADB2C\Entity\AccessToken;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\Exception\InternalErrorException;
@@ -173,8 +171,8 @@ class Authorize {
 
         $accessToken = new AccessToken(json_decode((string)$response->getBody()->getContents(), true));
 
-        $jws = $this->verifyToken($accessToken->accessToken);
-        $accessToken->setJWS($jws);
+        $claims = $this->verifyToken($accessToken->accessToken);
+        $accessToken->setClaims($claims);
 
         return $accessToken;
     }
@@ -201,37 +199,18 @@ class Authorize {
 
         $accessToken = new AccessToken(json_decode((string)$response->getBody()->getContents(), true));
 
-        $jws = $this->verifyToken($accessToken->accessToken);
-        $accessToken->setJWS($jws);
+        $claims = $this->verifyToken($accessToken->accessToken);
+        $accessToken->setClaims($claims);
 
         return $accessToken;
     }
 
-    public function verifyToken(string $token)
+    public function verifyToken(string $token): array
     {
         try {
-            $jwt = $this->decodeJWT($token);
-            $jwk = $this->findJwk($jwt->header['kid']);
-            $rsa = $this->jwt->decodeJWK($jwk);
-            return $jwt->verify($rsa->getPublicKey(), 'RS256');
-        } catch (JOSE_Exception_VerificationFailed $e) {
+            return $this->jwt->decodeJWK($token, $this->getJWKs());
+        } catch (\Exception $e) {
             throw new VerificationError($e->getMessage());
         }
-    }
-
-    public function findJwk(string $kid)
-    {
-        $jwks = $this->getJWKs();
-        $key = array_search($kid, array_column($jwks, 'kid'));;
-        if ($key === false) {
-            throw new VerificationError('Key not found');
-        }
-
-        return $jwks[$key];
-    }
-
-    public function decodeJWT(string $token): JOSE_JWT
-    {
-        return $this->jwt->decodeJWT($token);
     }
 }
