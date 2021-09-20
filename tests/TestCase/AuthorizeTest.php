@@ -5,16 +5,10 @@ namespace kaz29\AzureADB2C\Test;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Query;
-use JOSE_JWS;
-use JOSE_JWT;
 use kaz29\AzureADB2C\Authorize;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\JWT;
 use PHPUnit\Framework\TestCase;
-use phpseclib\Crypt\RSA;
-use stdClass;
-
-use function GuzzleHttp\Psr7\build_query;
 
 class AuthorizeTest extends TestCase
 {
@@ -196,47 +190,15 @@ class AuthorizeTest extends TestCase
             });
 
         $jwt = $this->getMockBuilder(JWT::class)
-            ->onlyMethods(['decodeJWK', 'decodeJWT'])
+            ->onlyMethods(['decodeJWK'])
             ->getMock();
+
         $jwt->expects($this->once())
             ->method('decodeJWK')
             ->with(
-                $this->equalTo([
-                    "kid" => "dummy_kid",
-                    "nbf" => 1493763266,
-                    "use" => "sig",
-                    "kty" => "RSA",
-                    "e" => "AQAB",
-                    "n" => "dummy_n",
-                ]),
-            )
-            ->willReturn(new class() extends RSA {
-                function getPublicKey($type = self::PUBLIC_FORMAT_PKCS8)
-                {
-                    return 'dummy_public_key';
-                }
-            });
-        $jwt->expects($this->once())
-            ->method('decodeJWT')
-            ->with(
                 $this->equalTo('dummy_access_token'),
             )
-            ->willReturn(new class() extends JOSE_JWT {
-                public $header = [
-                    'kid' => "dummy_kid",
-                ];
-
-                function verify($publicKey, $alg = null)
-                {
-                    $jwt = new stdClass();
-                    $jwt->header = [];
-                    $jwt->claims = [];
-                    $jwt->signature = [];
-                    $jwt->raw = [];
-                    
-                    return new JOSE_JWS($jwt);
-                }
-            });
+            ->willReturn([]);
 
         /**
          * @var JWT $jwt
