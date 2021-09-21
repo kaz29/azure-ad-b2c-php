@@ -60,10 +60,14 @@ class AuthorizeTest extends TestCase
             'client_id' => 'dummy_client_id', 
             'client_secret' => 'dummy_client_secret',
         ]);
-        $authorize->setOpenIdConfiguration(new Configuration([
-            'authorization_endpoint' => 'https://example.com/authorization?p=b2c_1_normalsignupsignin',
-        ]));
+        $authorize->setOpenIdConfiguration(
+            'b2c_1_normalsignupsignin',
+            new Configuration([
+                'authorization_endpoint' => 'https://example.com/authorization?p=b2c_1_normalsignupsignin',
+            ]),
+        );
         $result = $authorize->getAuthorizationEndpoint(
+            'b2c_1_normalsignupsignin',
             'https://example.com/oauth/callback',
             'https://azadb2cresr.onmicrosoft.com/api openid offline_access',
             12345
@@ -112,11 +116,14 @@ class AuthorizeTest extends TestCase
             'client_id' => 'dummy_client_id',
             'client_secret' => 'dummy_client_secret',
         ]);
-        $authorize->setOpenIdConfiguration(new Configuration([
-            'jwks_uri' => 'https://example.com/jwks',
-        ]));
+        $authorize->setOpenIdConfiguration(
+            'b2c_1_normalsignupsignin',
+            new Configuration([
+                'jwks_uri' => 'https://example.com/jwks',
+            ]),
+        );
 
-        $result = $authorize->getJWKs();
+        $result = $authorize->getJWKs('b2c_1_normalsignupsignin');
         $expected = [
             [
                 "kid" => "dummy_kid",
@@ -208,11 +215,15 @@ class AuthorizeTest extends TestCase
             'client_id' => 'dummy_client_id', 
             'client_secret' => 'dummy_client_secret',
         ]);    
-        $authorize->setOpenIdConfiguration(new Configuration([
-            'token_endpoint' => 'https://example.com/token',
-            'jwks_uri' => 'https://example.com/jwks',
-        ]));
+        $authorize->setOpenIdConfiguration(
+            'b2c_1_normalsignupsignin',
+            new Configuration([
+                'token_endpoint' => 'https://example.com/token',
+                'jwks_uri' => 'https://example.com/jwks',
+            ]),
+        );
         $result = $authorize->getAccessToken(
+            'b2c_1_normalsignupsignin',
             'dummy_code',
             'https://example.com/api/ offline_access',
             'https://localhost/'
