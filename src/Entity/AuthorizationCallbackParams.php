@@ -19,4 +19,15 @@ class AuthorizationCallbackParams extends BaseEntity
             'id_token' => 'idToken',
         ],
     ];
+    protected $claims;
+
+    public function setClaims(array $claims): void
+    {
+        $this->claims = new Claims($claims);
+    }
+
+    public function getClaims(): Claims
+    {
+        return $this->claims;
+    }
 }
