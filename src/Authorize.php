@@ -30,9 +30,9 @@ class Authorize {
     protected $tenant;
     protected $client_id;
     protected $client_secret;
-    protected $configuration;
+    protected $configurations = [];
     protected $jwt;
-    protected $jwks;
+    protected $jwks = [];
     protected $authorizationEndpoint = null;
 
     public function __construct(Client $client, JWT $jwt, array $config)
@@ -67,25 +67,26 @@ class Authorize {
         return $uri . '?' . Query::build($query);
     }
 
-    public function loadOpenIdConfiguration(string $p): Configuration
+    public function loadOpenIdConfiguration(string $flow): Configuration
     {
-        $response = $this->client->get($this->getConfigurationUri($p), ['query' => ['p' => $p]]);
+        $response = $this->client->get($this->getConfigurationUri($flow), ['query' => ['p' => $flow]]);
         if ($response->getStatusCode() !== 200) {
             throw new ResponseErrorException('Could not get configuration', $response->getStatusCode());
         }
 
         $json = json_decode((string)$response->getBody(), true);
-        $this->configuration = new Configuration($json);
+        $this->configurations[$flow] = new Configuration($json);
         
-        return $this->configuration;
+        return $this->configurations[$flow];
     }
 
-    public function setOpenIdConfiguration(Configuration $config)
+    public function setOpenIdConfiguration(string $flow, Configuration $config)
     {
-        $this->configuration = $config;
+        $this->configurations[$flow] = $config;
     }
 
     public function getAuthorizationEndpoint(
+        string $flow,
         string $redirectUri,
         string $scope, 
         $nonce, 
@@ -94,11 +95,14 @@ class Authorize {
         string $state = null
     ): string
     {
-        $authorizationEndpoint = $this->authorizationEndpoint !== null
-            ? $this->authorizationEndpoint
-            : $this->configuration->authorizationEndpoint;
+        $authorizationEndpoint = null;
+        if ($this->authorizationEndpoint !== null) {
+            $authorizationEndpoint = $this->authorizationEndpoint;
+        } else if (array_key_exists($flow, $this->configurations)) {
+            $authorizationEndpoint = $this->configurations[$flow]->authorizationEndpoint;
+        }
 
-            if (is_null($this->configuration)) {
+        if (is_null($authorizationEndpoint)) {
             throw new InternalErrorException('Configuration not complete');
         }
 
@@ -118,16 +122,16 @@ class Authorize {
         return $authorizationEndpoint . '&' . Query::build($query);
     }
 
-    public function getJWKs(): array
+    public function getJWKs(string $flow): array
     {
-        if (is_array($this->jwks)) {
+        if (is_array($this->jwks) && array_key_exists($flow, $this->jwks)) {
             return $this->jwks;
         }
 
-        if (is_null($this->configuration)) {
+        if (array_key_exists($flow, $this->configurations) !== true) {
             throw new InternalErrorException('Configuration not complete');
         }
-        $response = $this->client->get($this->configuration->jwksUri);
+        $response = $this->client->get($this->configurations[$flow]->jwksUri);
         if ($response->getStatusCode() !== 200) {
             throw new ResponseErrorException('Could not get jwks', $response->getStatusCode());
         }
@@ -141,19 +145,24 @@ class Authorize {
             throw new ResponseErrorException('Unknown jwks response format');
         }
 
-        $this->jwks = $jwks['keys'];
+        $this->jwks[$flow] = $jwks['keys'];
         
-        return $this->jwks;
+        return $this->jwks[$flow];
     }
 
     public function getAccessToken(
+        string $flow,
         string $code, 
         string $scope,
         string $redirect_url,
         string $grant_type = 'authorization_code'): AccessToken
     {
+        if (array_key_exists($flow, $this->configurations) !== true) {
+            throw new InternalErrorException('Configuration not complete');
+        }
+
         $response = $this->client->post(
-            $this->configuration->tokenEndpoint, 
+            $this->configurations[$flow]->tokenEndpoint, 
             [
                 'form_params' => [
                     'grant_type' => $grant_type,
@@ -171,18 +180,24 @@ class Authorize {
 
         $accessToken = new AccessToken(json_decode((string)$response->getBody()->getContents(), true));
 
-        $claims = $this->verifyToken($accessToken->accessToken);
+        $claims = $this->verifyToken($accessToken->accessToken, $flow);
         $accessToken->setClaims($claims);
 
         return $accessToken;
     }
 
     public function tokenRefresh(
+        string $flow,
         string $refreshToken,
-        string $redirect_url): AccessToken
+        string $redirect_url,
+        string $scope): AccessToken
     {
+        if (array_key_exists($flow, $this->configurations) !== true) {
+            throw new InternalErrorException('Configuration not complete');
+        }
+
         $response = $this->client->post(
-            $this->configuration->tokenEndpoint,
+            $this->configurations[$flow]->tokenEndpoint,
             [
                 'form_params' => [
                     'grant_type' => 'refresh_token',
@@ -199,16 +214,16 @@ class Authorize {
 
         $accessToken = new AccessToken(json_decode((string)$response->getBody()->getContents(), true));
 
-        $claims = $this->verifyToken($accessToken->accessToken);
+        $claims = $this->verifyToken($accessToken->accessToken, $flow);
         $accessToken->setClaims($claims);
 
         return $accessToken;
     }
 
-    public function verifyToken(string $token): array
+    public function verifyToken(string $token, string $flow): array
     {
         try {
-            return $this->jwt->decodeJWK($token, $this->getJWKs());
+            return $this->jwt->decodeJWK($token, $this->getJWKs($flow));
         } catch (\Exception $e) {
             throw new VerificationError($e->getMessage());
         }
