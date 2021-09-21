@@ -189,8 +189,7 @@ class Authorize {
     public function tokenRefresh(
         string $flow,
         string $refreshToken,
-        string $redirect_url,
-        string $scope): AccessToken
+        string $redirect_url): AccessToken
     {
         if (array_key_exists($flow, $this->configurations) !== true) {
             throw new InternalErrorException('Configuration not complete');
