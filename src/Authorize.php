@@ -125,7 +125,7 @@ class Authorize {
     public function getJWKs(string $flow): array
     {
         if (is_array($this->jwks) && array_key_exists($flow, $this->jwks)) {
-            return $this->jwks;
+            return $this->jwks[$flow];
         }
 
         if (array_key_exists($flow, $this->configurations) !== true) {
