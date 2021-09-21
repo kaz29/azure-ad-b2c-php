@@ -44,10 +44,6 @@ class Authorize {
         $this->client_secret = $config['client_secret'] ?? '';
         $this->flow = $config['flow'] ?? null;
 
-        if ($this->flow !== null) {
-            $this->loadOpenIdConfiguration($this->flow);
-        }
-
         if (array_key_exists('jwks', $config) && is_array($config['jwks'])) {
             $this->jwks = $config['jwks'];
         }
