@@ -33,7 +33,7 @@ class Authorize {
     protected $configurations = [];
     protected $jwt;
     protected $jwks = [];
-    protected $authorizationEndpoint = null;
+    protected $customDomain;
 
     public function __construct(Client $client, JWT $jwt, array $config)
     {
@@ -43,13 +43,10 @@ class Authorize {
         $this->client_id = $config['client_id'] ?? '';
         $this->client_secret = $config['client_secret'] ?? '';
         $this->flow = $config['flow'] ?? null;
+        $this->customDomain = $config['custom_domain'] ?? null;
 
         if (array_key_exists('jwks', $config) && is_array($config['jwks'])) {
             $this->jwks = $config['jwks'];
-        }
-
-        if (array_key_exists('custom_authorization_endpoint', $config) && !empty($config['custom_authorization_endpoint'])) {
-            $this->authorizationEndpoint = $config['custom_authorization_endpoint'];
         }
     }
 
@@ -91,17 +88,11 @@ class Authorize {
         string $state = null
     ): string
     {
-        $authorizationEndpoint = null;
-        if ($this->authorizationEndpoint !== null) {
-            $authorizationEndpoint = $this->authorizationEndpoint;
-        } else if (array_key_exists($flow, $this->configurations)) {
-            $authorizationEndpoint = $this->configurations[$flow]->authorizationEndpoint;
-        }
-
-        if (is_null($authorizationEndpoint)) {
+        if (array_key_exists($flow, $this->configurations) !== true) {
             throw new InternalErrorException('Configuration not complete');
         }
 
+        $authorizationEndpoint = $this->applyCustomDomain($this->configurations[$flow]->authorizationEndpoint);
         $query = [
             'client_id' => $this->client_id,
             'redirect_uri' => $redirectUri,
@@ -222,5 +213,15 @@ class Authorize {
         } catch (\Exception $e) {
             throw new VerificationError($e->getMessage());
         }
+    }
+
+    public function applyCustomDomain(string $url): string
+    {
+        if ($this->customDomain === null) {
+            return $url;
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+        return str_replace($host, $this->customDomain, $url);
     }
 }
