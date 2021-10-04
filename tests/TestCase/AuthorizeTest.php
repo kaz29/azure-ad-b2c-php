@@ -232,4 +232,37 @@ class AuthorizeTest extends TestCase
         $this->assertEquals('Bearer', $result->tokenType);
         $this->assertEquals('dummy_refresh_access_token', $result->refreshToken);
     }
+
+    public function testApplyCustomDomain()
+    {
+        /**
+         * @var Client $client
+         */
+        $client = $this->getMockBuilder(Client::class)
+            ->addMethods(['post', 'get'])
+            ->getMock();
+        /**
+         * @var JWT $jwt
+         */
+        $jwt = $this->getMockBuilder(JWT::class)
+            ->onlyMethods(['decodeJWK'])
+            ->getMock();
+
+        $authorize = new Authorize($client, $jwt, [
+            'tenant' => 'azadb2cresr', 
+            'client_id' => 'dummy_client_id', 
+            'client_secret' => 'dummy_client_secret',
+            'custom_domain' => 'example.jp',
+        ]);    
+        $authorize->setOpenIdConfiguration(
+            'b2c_1_normalsignupsignin',
+            new Configuration([
+                'token_endpoint' => 'https://example.com/token',
+                'jwks_uri' => 'https://example.com/jwks',
+            ]),
+        );
+
+        $result = $authorize->applyCustomDomain('https://example.com/hoge?p=1');
+        $this->assertEquals('https://example.jp/hoge?p=1', $result);
+    }
 }
