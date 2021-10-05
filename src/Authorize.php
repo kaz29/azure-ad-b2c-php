@@ -109,6 +109,15 @@ class Authorize {
         return $authorizationEndpoint . '&' . Query::build($query);
     }
 
+    public function getEndSessionEndpoint(string $flow): string
+    {
+        if (array_key_exists($flow, $this->configurations) !== true) {
+            throw new InternalErrorException('Configuration not complete');
+        }
+
+        return $this->applyCustomDomain($this->configurations[$flow]->endSessionEndpoint);
+    }
+
     public function getJWKs(string $flow): array
     {
         if (is_array($this->jwks) && array_key_exists($flow, $this->jwks)) {
