@@ -265,4 +265,182 @@ class AuthorizeTest extends TestCase
         $result = $authorize->applyCustomDomain('https://example.com/hoge?p=1');
         $this->assertEquals('https://example.jp/hoge?p=1', $result);
     }
+
+    private function createMockClient(): Client
+    {
+         /**
+         * @var Client $client
+         */
+        $client = $this->getMockBuilder(Client::class)
+            ->addMethods(['post', 'get'])
+            ->getMock();
+        $response = new class() {
+            public function getStatusCode()
+            {
+                return 200;
+            }
+
+            public function getBody()
+            {
+                $body = new class() {
+                    public function getContents()
+                    {
+                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'access_token_response.json');
+                    }
+                };
+
+                return $body;
+            }
+        };
+        $client->expects($this->once())
+            ->method('post')
+            ->with(
+                $this->equalTo('https://example.com/token'),
+                $this->equalTo([
+                    'form_params' => [
+                        'grant_type' => 'authorization_code',
+                        'client_id' => 'dummy_client_id',
+                        'scope' => 'https://example.com/api/ offline_access',
+                        'code' => 'dummy_code',
+                        'redirect_uri' => 'https://localhost/',
+                        'client_secret' => 'dummy_client_secret',
+                    ]
+                ])
+            )
+            ->willReturn($response);
+        $client->expects($this->once())
+            ->method('get')
+            ->with(
+                $this->equalTo('https://example.com/jwks')
+            )
+            ->willReturn(new class() {
+                public function getStatusCode()
+                {
+                    return 200;
+                }
+
+                public function getBody()
+                {
+                    return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
+                }
+            });
+
+        return $client;
+    }
+
+    private function getDefaultClaimsConfig(): array
+    {
+        return [
+            'map' => [
+                'iss' => 'iss',
+                'exp' => 'exp',
+                'nbf' => 'nbf',
+                'aud' => 'aud',
+                'tfp' => 'tfp',
+                'scp' => 'scp',
+                'azp' => 'azp',
+                'var' => 'var',
+                'iat' => 'iat',
+                'nonce' => 'nonce',
+                'auth_time' => 'authTime',
+
+                'idp' => 'idp',
+                'idp_access_token' => 'idpAccessToken',
+
+                'sub' => 'sub',
+                'given_name' => 'givenName',
+                'family_name' => 'familyName',
+                'name' => 'name',
+                'country' => 'country',
+                'postalCode' => 'postalCode',
+                'emails' => 'emails',
+            ],
+        ];
+    }
+
+    private function createMockJwt(array $payload = []): JWT
+    {
+        /**
+         * @var JWT $jwt
+         */
+        $jwt = $this->getMockBuilder(JWT::class)
+            ->onlyMethods(['decodeJWK'])
+            ->getMock();
+
+        $jwt->expects($this->once())
+            ->method('decodeJWK')
+            ->with(
+                $this->equalTo('dummy_access_token'),
+            )
+            ->willReturn($payload);
+
+        return $jwt;
+    }
+
+    public function GetAccessTokenTestDataProvider()
+    {
+        $default_payload = [
+            'sub' => 'dd0b2128-7760-4495-6b2e-31eceb078ce7',
+            'exp' => time() + 60 * 60 * 24,
+            'nbf' => time(),
+            'ver' => '1.0',
+            'iss' => 'https://example.b2clogin.com/7ae4835a-3413-4498-9725-84e3fd52b1ea/v2.0/',
+            'aud' => 'c84d8c55-847a-4a75-861e-ae8dae48a411',
+            'nonce' => 'defaultNonce',
+            'iat' => time(),
+            'auth_time' => time(),
+            'idp_access_token' => 'token',
+            'given_name' => 'Foo',
+            'family_name' => 'Bar',
+            'name' => 'BarFoo',
+            'idp' => 'google.com',
+            'emails' => [
+                'foo@example.com',
+            ],
+            'tfp' => 'b2c_1_normalsignupsignin',
+        ];
+        $default_claims_config = $this->getDefaultClaimsConfig();
+
+        return [
+            [$default_payload, null],
+            [$default_payload, $default_claims_config],
+            [['foo' => 'bar'], ['map' => ['foo' => 'test']]],
+        ];
+    }
+
+    /**
+     * @dataProvider GetAccessTokenTestDataProvider
+     */
+    public function testGetAccessToken(array $jwt_payload, ?array $claims_config)
+    {
+        $mockClient = $this->createMockClient();
+        $mockJwt = $this->createMockJwt($jwt_payload);
+
+        $authorize = new Authorize($mockClient, $mockJwt, [
+            'tenant' => 'azadb2cresr',
+            'client_id' => 'dummy_client_id',
+            'client_secret' => 'dummy_client_secret',
+            'claims_config' => $claims_config
+        ]);
+        $authorize->setOpenIdConfiguration(
+            'b2c_1_normalsignupsignin',
+            new Configuration([
+                'token_endpoint' => 'https://example.com/token',
+                'jwks_uri' => 'https://example.com/jwks',
+            ]),
+        );
+
+        $access_token = $authorize->getAccessToken(
+            'b2c_1_normalsignupsignin',
+            'dummy_code',
+            'https://example.com/api/ offline_access',
+            'https://localhost/'
+        );
+        $claims = $access_token->getClaims();
+        $map = $claims_config ? $claims_config['map'] : $this->getDefaultClaimsConfig()['map'];
+        foreach ($map as $property => $payload_key)
+        {
+            $this->assertEquals($jwt_payload[$payload_key], $claims->$property);
+        }
+    }
 }
