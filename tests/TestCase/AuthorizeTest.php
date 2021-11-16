@@ -404,7 +404,7 @@ class AuthorizeTest extends TestCase
         return [
             [$default_payload, null],
             [$default_payload, $default_claims_config],
-            [['foo' => 'bar'], ['map' => ['foo' => 'test']]],
+            [['payload_key' => 'payload_value'], ['map' => ['payload_key' => 'claimsProperty']]],
         ];
     }
 
@@ -438,9 +438,11 @@ class AuthorizeTest extends TestCase
         );
         $claims = $access_token->getClaims();
         $map = $claims_config ? $claims_config['map'] : $this->getDefaultClaimsConfig()['map'];
-        foreach ($map as $property => $payload_key)
+
+        foreach ($map as $payload_key => $claims_property)
         {
-            $this->assertEquals($jwt_payload[$payload_key], $claims->$property);
+            $payload = array_key_exists($payload_key, $jwt_payload) ? $jwt_payload[$payload_key] : null;
+            $this->assertEquals($payload, $claims->$claims_property);
         }
     }
 }
