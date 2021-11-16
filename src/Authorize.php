@@ -34,6 +34,7 @@ class Authorize {
     protected $jwt;
     protected $jwks = [];
     protected $customDomain;
+    protected $claims_config = [];
 
     public function __construct(Client $client, JWT $jwt, array $config)
     {
@@ -44,6 +45,7 @@ class Authorize {
         $this->client_secret = $config['client_secret'] ?? '';
         $this->flow = $config['flow'] ?? null;
         $this->customDomain = $config['custom_domain'] ?? null;
+        $this->claims_config = $config['claims_config'] ?? null;
 
         if (array_key_exists('jwks', $config) && is_array($config['jwks'])) {
             $this->jwks = $config['jwks'];
@@ -177,7 +179,8 @@ class Authorize {
         $accessToken = new AccessToken(json_decode((string)$response->getBody()->getContents(), true));
 
         $claims = $this->verifyToken($accessToken->accessToken, $flow);
-        $accessToken->setClaims($claims);
+
+        $accessToken->setClaims($claims, $this->claims_config);
 
         return $accessToken;
     }

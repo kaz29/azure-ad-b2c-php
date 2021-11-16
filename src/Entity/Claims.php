@@ -57,6 +57,14 @@ class Claims extends BaseEntity {
         ],
     ];
 
+    public function __construct(array $data, array $config = null)
+    {
+        if ($config !== null) {
+            $this->config = $config;
+        }
+        parent::__construct($data);
+    }
+
     public function getFullName(string $locale): string
     {
         $fullName = '';

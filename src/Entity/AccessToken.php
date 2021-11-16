@@ -36,9 +36,9 @@ class AccessToken extends BaseEntity {
 
     protected $claims;
 
-    public function setClaims(array $claims): void
+    public function setClaims(array $claims, array $config = null): void
     {
-        $this->claims = new Claims($claims);
+        $this->claims = new Claims($claims, $config);
     }
 
     public function getClaims(): Claims
