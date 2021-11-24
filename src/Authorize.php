@@ -54,7 +54,7 @@ class Authorize {
 
     public function getConfigurationUri(string $p): string
     {
-        $uri = sprintf(self::$CONFIGURATION_URI_FORMAT, $this->tenant, $this->tenant);
+        $uri = $this->applyCustomDomain(sprintf(self::$CONFIGURATION_URI_FORMAT, $this->tenant, $this->tenant));
         $query = [
             'p' => $p,
         ];
