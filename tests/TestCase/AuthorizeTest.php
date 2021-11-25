@@ -445,4 +445,20 @@ class AuthorizeTest extends TestCase
             $this->assertEquals($payload, $claims->$claims_property);
         }
     }
+
+    public function testGetConfigurationUri()
+    {
+        $authorize = new Authorize(new Client(), new JWT(), [
+            'tenant' => 'azadb2cresr',
+        ]);
+        $result = $authorize->getConfigurationUri('signin');
+        $this->assertEquals('https://azadb2cresr.b2clogin.com/azadb2cresr.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=signin', $result);
+
+        $authorize = new Authorize(new Client(), new JWT(), [
+            'tenant' => 'azadb2cresr',
+            'custom_domain' => 'custom.example.com'
+        ]);
+        $result = $authorize->getConfigurationUri('signin');
+        $this->assertEquals('https://custom.example.com/azadb2cresr.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=signin', $result);
+    }
 }
