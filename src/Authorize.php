@@ -120,6 +120,11 @@ class Authorize {
         return $this->applyCustomDomain($this->configurations[$flow]->endSessionEndpoint);
     }
 
+    public function setJWKs(string $flow, array $jwks): void
+    {
+        $this->jwks[$flow] = $jwks;
+    }
+
     public function getJWKs(string $flow): array
     {
         if (is_array($this->jwks) && array_key_exists($flow, $this->jwks)) {
