@@ -19,7 +19,7 @@ class AuthorizeTest extends TestCase
          * @var Client $client
          */
         $client = $this->getMockBuilder(Client::class)
-            ->addMethods(['get'])
+            ->onlyMethods(['get'])
             ->getMock();
         $response = new class() {
             public function getStatusCode()
@@ -89,7 +89,7 @@ class AuthorizeTest extends TestCase
     public function testGetJwks()
     {
         $client = $this->getMockBuilder(Client::class)
-            ->addMethods(['get'])
+            ->onlyMethods(['get'])
             ->getMock();
         $response = new class() {
             public function getStatusCode()
@@ -143,7 +143,7 @@ class AuthorizeTest extends TestCase
          * @var Client $client
          */
         $client = $this->getMockBuilder(Client::class)
-            ->addMethods(['post', 'get'])
+            ->onlyMethods(['post', 'get'])
             ->getMock();
         $response = new class() {
             public function getStatusCode()
@@ -239,7 +239,7 @@ class AuthorizeTest extends TestCase
          * @var Client $client
          */
         $client = $this->getMockBuilder(Client::class)
-            ->addMethods(['post', 'get'])
+            ->onlyMethods(['post', 'get'])
             ->getMock();
         /**
          * @var JWT $jwt
@@ -272,7 +272,7 @@ class AuthorizeTest extends TestCase
          * @var Client $client
          */
         $client = $this->getMockBuilder(Client::class)
-            ->addMethods(['post', 'get'])
+            ->onlyMethods(['post', 'get'])
             ->getMock();
         $response = new class() {
             public function getStatusCode()
