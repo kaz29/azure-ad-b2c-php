@@ -9,6 +9,7 @@ use kaz29\AzureADB2C\Authorize;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\JWT;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 
 class AuthorizeTest extends TestCase
 {
@@ -21,7 +22,7 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['get'])
             ->getMock();
-        $response = new class() {
+        $response = new class() implements ResponseInterface {
             public function getStatusCode()
             {
                 return 200;
@@ -91,7 +92,7 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['get'])
             ->getMock();
-        $response = new class() {
+        $response = new class() implements ResponseInterface {
             public function getStatusCode()
             {
                 return 200;
@@ -145,7 +146,7 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['post', 'get'])
             ->getMock();
-        $response = new class() {
+        $response = new class() implements ResponseInterface {
             public function getStatusCode()
             {
                 return 200;
@@ -179,22 +180,31 @@ class AuthorizeTest extends TestCase
                 ])
             )
             ->willReturn($response);
+
+        $response = new class() implements ResponseInterface {
+            public function getStatusCode()
+            {
+                return 200;
+            }
+
+            public function getBody()
+            {
+                $body = new class() {
+                    public function getContents() 
+                    {
+                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
+                    }
+                };
+
+                return $body;
+            }
+        };
         $client->expects($this->once())
             ->method('get')
             ->with(
                 $this->equalTo('https://example.com/jwks')
             )
-            ->willReturn(new class() {
-                public function getStatusCode()
-                {
-                    return 200;
-                }
-    
-                public function getBody()
-                {
-                    return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
-                }
-            });
+            ->willReturn($response);
 
         $jwt = $this->getMockBuilder(JWT::class)
             ->onlyMethods(['decodeJWK'])
@@ -274,7 +284,7 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['post', 'get'])
             ->getMock();
-        $response = new class() {
+        $response = new class() implements ResponseInterface {
             public function getStatusCode()
             {
                 return 200;
@@ -308,22 +318,31 @@ class AuthorizeTest extends TestCase
                 ])
             )
             ->willReturn($response);
+
+        $response = new class() implements ResponseInterface {
+            public function getStatusCode()
+            {
+                return 200;
+            }
+
+            public function getBody()
+            {
+                $body = new class() {
+                    public function getContents()
+                    {
+                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
+                    }
+                };
+
+                return $body;
+            }
+        };
         $client->expects($this->once())
             ->method('get')
             ->with(
                 $this->equalTo('https://example.com/jwks')
             )
-            ->willReturn(new class() {
-                public function getStatusCode()
-                {
-                    return 200;
-                }
-
-                public function getBody()
-                {
-                    return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
-                }
-            });
+            ->willReturn($response);
 
         return $client;
     }
