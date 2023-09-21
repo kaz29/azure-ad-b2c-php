@@ -23,7 +23,7 @@ class AuthorizeTest extends TestCase
             ->onlyMethods(['get'])
             ->getMock();
         $response = new class() implements ResponseInterface {
-            public function getStatusCode()
+            public function getStatusCode(): int
             {
                 return 200;
             }
@@ -93,7 +93,7 @@ class AuthorizeTest extends TestCase
             ->onlyMethods(['get'])
             ->getMock();
         $response = new class() implements ResponseInterface {
-            public function getStatusCode()
+            public function getStatusCode(): int
             {
                 return 200;
             }
@@ -147,7 +147,7 @@ class AuthorizeTest extends TestCase
             ->onlyMethods(['post', 'get'])
             ->getMock();
         $response = new class() implements ResponseInterface {
-            public function getStatusCode()
+            public function getStatusCode(): int
             {
                 return 200;
             }
@@ -182,7 +182,7 @@ class AuthorizeTest extends TestCase
             ->willReturn($response);
 
         $response = new class() implements ResponseInterface {
-            public function getStatusCode()
+            public function getStatusCode(): int
             {
                 return 200;
             }
@@ -285,7 +285,7 @@ class AuthorizeTest extends TestCase
             ->onlyMethods(['post', 'get'])
             ->getMock();
         $response = new class() implements ResponseInterface {
-            public function getStatusCode()
+            public function getStatusCode(): int
             {
                 return 200;
             }
@@ -320,7 +320,7 @@ class AuthorizeTest extends TestCase
             ->willReturn($response);
 
         $response = new class() implements ResponseInterface {
-            public function getStatusCode()
+            public function getStatusCode(): int
             {
                 return 200;
             }
