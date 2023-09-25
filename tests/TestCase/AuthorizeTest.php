@@ -10,8 +10,6 @@ use kaz29\AzureADB2C\Authorize;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\JWT;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use kaz29\AzureADB2C\Test\Utils\ResponseMock;
 
 class AuthorizeTest extends TestCase
@@ -115,6 +113,7 @@ class AuthorizeTest extends TestCase
             'b2c_1_normalsignupsignin',
             new Configuration([
                 'jwks_uri' => 'https://example.com/jwks',
+                'id_token_signing_alg_values_supported' => ['RS256'],
             ]),
         );
 
@@ -127,6 +126,7 @@ class AuthorizeTest extends TestCase
                 "kty" => "RSA",
                 "e" => "AQAB",
                 "n" => "dummy_n",
+                'alg' => 'RS256',
             ]
         ];
         $this->assertEquals($expected, $result);
@@ -200,6 +200,7 @@ class AuthorizeTest extends TestCase
             new Configuration([
                 'token_endpoint' => 'https://example.com/token',
                 'jwks_uri' => 'https://example.com/jwks',
+                'id_token_signing_alg_values_supported' => ['RS256'],
             ]),
         );
         $result = $authorize->getAccessToken(
@@ -239,6 +240,7 @@ class AuthorizeTest extends TestCase
             new Configuration([
                 'token_endpoint' => 'https://example.com/token',
                 'jwks_uri' => 'https://example.com/jwks',
+                'id_token_signing_alg_values_supported' => ['RS256'],
             ]),
         );
 
@@ -392,6 +394,7 @@ class AuthorizeTest extends TestCase
             new Configuration([
                 'token_endpoint' => 'https://example.com/token',
                 'jwks_uri' => 'https://example.com/jwks',
+                'id_token_signing_alg_values_supported' => ['RS256'],
             ]),
         );
 
