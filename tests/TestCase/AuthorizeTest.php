@@ -4,12 +4,15 @@ declare(strict_types=1);
 namespace kaz29\AzureADB2C\Test;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\BufferStream;
 use GuzzleHttp\Psr7\Query;
 use kaz29\AzureADB2C\Authorize;
 use kaz29\AzureADB2C\Entity\Configuration;
 use kaz29\AzureADB2C\JWT;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+use kaz29\AzureADB2C\Test\Utils\ResponseMock;
 
 class AuthorizeTest extends TestCase
 {
@@ -22,17 +25,13 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['get'])
             ->getMock();
-        $response = new class() implements ResponseInterface {
-            public function getStatusCode(): int
-            {
-                return 200;
-            }
 
-            public function getBody()
-            {
-                return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'configuration_response.json');
-            }
-        };
+        $stream = new BufferStream();
+        $stream->write(file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'configuration_response.json'));  
+        $response = new ResponseMock();
+        $response
+            ->withStatus(200)
+            ->withBody($stream);
         $client->expects($this->once())
             ->method('get')
             ->with(
@@ -92,17 +91,12 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['get'])
             ->getMock();
-        $response = new class() implements ResponseInterface {
-            public function getStatusCode(): int
-            {
-                return 200;
-            }
-
-            public function getBody()
-            {
-                return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
-            }
-        };
+        $stream = new BufferStream();
+        $stream->write(file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json'));  
+        $response = new ResponseMock();
+        $response
+            ->withStatus(200)
+            ->withBody($stream);
         $client->expects($this->once())
             ->method('get')
             ->with(
@@ -146,24 +140,12 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['post', 'get'])
             ->getMock();
-        $response = new class() implements ResponseInterface {
-            public function getStatusCode(): int
-            {
-                return 200;
-            }
-
-            public function getBody()
-            {
-                $body = new class() {
-                    public function getContents() 
-                    {
-                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'access_token_response.json');
-                    }
-                };
-
-                return $body;
-            }
-        };
+        $stream = new BufferStream();
+        $stream->write(file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'access_token_response.json'));  
+        $response = new ResponseMock();
+        $response
+            ->withStatus(200)
+            ->withBody($stream);
         $client->expects($this->once())
             ->method('post')
             ->with(
@@ -181,24 +163,12 @@ class AuthorizeTest extends TestCase
             )
             ->willReturn($response);
 
-        $response = new class() implements ResponseInterface {
-            public function getStatusCode(): int
-            {
-                return 200;
-            }
-
-            public function getBody()
-            {
-                $body = new class() {
-                    public function getContents() 
-                    {
-                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
-                    }
-                };
-
-                return $body;
-            }
-        };
+        $stream = new BufferStream();
+        $stream->write(file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json'));  
+        $response = new ResponseMock();
+        $response
+            ->withStatus(200)
+            ->withBody($stream);
         $client->expects($this->once())
             ->method('get')
             ->with(
@@ -284,24 +254,12 @@ class AuthorizeTest extends TestCase
         $client = $this->getMockBuilder(Client::class)
             ->onlyMethods(['post', 'get'])
             ->getMock();
-        $response = new class() implements ResponseInterface {
-            public function getStatusCode(): int
-            {
-                return 200;
-            }
-
-            public function getBody()
-            {
-                $body = new class() {
-                    public function getContents()
-                    {
-                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'access_token_response.json');
-                    }
-                };
-
-                return $body;
-            }
-        };
+        $stream = new BufferStream();
+        $stream->write(file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'access_token_response.json'));  
+        $response = new ResponseMock();
+        $response
+            ->withStatus(200)
+            ->withBody($stream);
         $client->expects($this->once())
             ->method('post')
             ->with(
@@ -319,24 +277,12 @@ class AuthorizeTest extends TestCase
             )
             ->willReturn($response);
 
-        $response = new class() implements ResponseInterface {
-            public function getStatusCode(): int
-            {
-                return 200;
-            }
-
-            public function getBody()
-            {
-                $body = new class() {
-                    public function getContents()
-                    {
-                        return file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json');
-                    }
-                };
-
-                return $body;
-            }
-        };
+        $stream = new BufferStream();
+        $stream->write(file_get_contents(TEST_DATA . DIRECTORY_SEPARATOR . 'jwks_response.json'));  
+        $response = new ResponseMock();
+        $response
+            ->withStatus(200)
+            ->withBody($stream);
         $client->expects($this->once())
             ->method('get')
             ->with(
@@ -379,9 +325,6 @@ class AuthorizeTest extends TestCase
 
     private function createMockJwt(array $payload = []): JWT
     {
-        /**
-         * @var JWT $jwt
-         */
         $jwt = $this->getMockBuilder(JWT::class)
             ->onlyMethods(['decodeJWK'])
             ->getMock();
@@ -393,6 +336,9 @@ class AuthorizeTest extends TestCase
             )
             ->willReturn($payload);
 
+        /**
+         * @var JWT $jwt
+         */
         return $jwt;
     }
 
