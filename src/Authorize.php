@@ -148,6 +148,21 @@ class Authorize {
             throw new ResponseErrorException('Unknown jwks response format');
         }
 
+        /**
+         * Firebase JWT v6.0.0でjwksにalgが含まれていない場合にエラーになる問題の対応
+         *
+         * @see https://github.com/firebase/php-jwt/releases/tag/v6.0.0
+         */
+        if (!is_array($this->configurations[$flow]->idTokenSigningAlgValuesSupported) ||
+            count($this->configurations[$flow]->idTokenSigningAlgValuesSupported) === 0) {
+            throw new InternalErrorException('Configuration not complete(idTokenSigningAlgValuesSupported)');
+        }
+
+        foreach($jwks['keys'] as $key => $value) {
+            if (!array_key_exists('alg', $value)) {
+                $jwks['keys'][$key]['alg'] = $this->configurations[$flow]->idTokenSigningAlgValuesSupported[0];
+            }
+        }
         $this->jwks[$flow] = $jwks['keys'];
         
         return $this->jwks[$flow];
